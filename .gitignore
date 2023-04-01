@@ -1,0 +1,7 @@
+API_KEY
+data
+lightning_logs
+.DS_Store
+__pycache__
+4010project
+wandb
