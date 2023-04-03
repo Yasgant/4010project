@@ -8,4 +8,17 @@ Membership Inference Attack
   - [x] Loss-based Attack
 
 - [x] MLP Attack
-- [ ] Defense
+- [ ] Target Model
+  - [x] CNN
+  - [x] MLP
+  - [ ] Resnet
+- [x] Defense
+  - [x] Confidence Masking
+  - [x] Regularization
+  - [ ] Diffierential Privacy (?)
+- [ ] Datasets
+  - [x] MNIST
+  - [x] CIFAR10
+  - [ ] A1-Kaggle
+- [ ] Hyper-parameter Tuning
+- [ ] Experiments

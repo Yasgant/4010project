@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from torch.nn.functional import one_hot
 from train import train
 import utils
-from models import get_target_model, get_attack_model
+from models import get_target_model, get_attack_model, get_shadow_model
 from torchmetrics import ROC
 from argparse import ArgumentParser
 
@@ -28,6 +28,8 @@ parser.add_argument('--dataset', type=str, default='CIFAR10')
 parser.add_argument('--target_model', type=str, default='cnn')
 parser.add_argument('--attack_model', type=str, default='mlp')
 parser.add_argument('--attack_hidden_size', type=int, default=20)
+parser.add_argument('--model_weight_decay', type=float, default=0.0)
+parser.add_argument('--topk', type=int, default=0)
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -36,41 +38,30 @@ if __name__ == '__main__':
             os.environ["WANDB_API_KEY"] = f.read()
     else:
         os.environ["WANDB_API_KEY"] = "SAMPLE" # replace with your own API key
-
-    TargetModel = get_target_model(args.target_model)
-    target_model = TargetModel(args)
-    shadow_model = TargetModel(args)
+    target_model, target_trained = get_target_model(args.target_model, args.dataset, args)
+    shadow_model, shadow_trained = get_shadow_model(args.target_model, args.dataset, args)
 
     DATASET = utils.get_dataset(args.dataset)
     train_data, test_data, member_data, nonmember_data = utils.split_dataset(DATASET)
 
-    if os.path.exists(f'data/target_{args.target_model}model.ckpt'):
-        target_model = target_model.load_from_checkpoint(f'data/target_{args.target_model}model.ckpt')
-    else:
-        target_model = train(target_model, f'target_{args.target_model}model', train_data, test_data, args=args)
-    if os.path.exists(f'data/shadow_{args.target_model}model.ckpt'):
-        shadow_model = shadow_model.load_from_checkpoint(f'data/shadow_{args.target_model}model.ckpt')
-    else:
-        shadow_model = train(shadow_model, f'shadow_{args.target_model}model', member_data, nonmember_data, args=args)
-    
+    if not target_trained:
+        target_model = train(target_model, f'target_{args.target_model}model_{args.dataset}', train_data, test_data, args=args)
+    if not shadow_trained:
+        shadow_model = train(shadow_model, f'shadow_{args.target_model}model_{args.dataset}', member_data, nonmember_data, args=args)
     membership_dataset = utils.prepare_membership(shadow_model, member_data, nonmember_data)
     membership_test_dataset = utils.prepare_membership(target_model, train_data, test_data)
 
-    AttackModel = get_attack_model(args.attack_model)
-    attack_model = AttackModel(args)
+    attack_model, attack_trained = get_attack_model(args.attack_model, args.dataset, args)
 
-    if len(list(attack_model.parameters())):
-        if os.path.exists('data/attack_model.ckpt'):
-            attack_model = attack_model.load_from_checkpoint('data/attack_model.ckpt')
-        else:
-            attack_model = train(attack_model, 'attack_model', membership_dataset, membership_test_dataset, args=args)
+    if not attack_trained:
+        attack_model = train(attack_model, f'attack_{args.attack_model}model_{args.dataset}', membership_dataset, membership_test_dataset, args=args)
     
     valid_loader = DataLoader(membership_test_dataset, batch_size=args.batch_size, shuffle=False)
     trainer = pl.Trainer(accelerator='cpu')
     attack_acc = trainer.validate(attack_model, valid_loader, verbose=False)[0]['val_acc']
     print(f'{args.attack_model} Attack Accuracy: {attack_acc}')
-    PredictModel = get_attack_model('predict')
-    predict_attacker = PredictModel(args)
+    
+    predict_attacker, _ = get_attack_model('predict', args.dataset, args)
     baseline_attack_acc = trainer.validate(predict_attacker, valid_loader, verbose=False)[0]['val_acc']
     print(f'Baseline Attack Accuracy: {baseline_attack_acc}')
 

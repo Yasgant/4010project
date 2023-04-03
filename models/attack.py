@@ -4,6 +4,7 @@ import lightning.pytorch as pl
 from torch import nn, optim
 from torchmetrics import Accuracy
 from torch.nn.functional import one_hot
+from scipy.stats import entropy
 
 class AttackBaseModel(pl.LightningModule):
     def __init__(self, args):
@@ -38,6 +39,7 @@ class AttackBaseModel(pl.LightningModule):
         return [optimizer], [scheduler]
 
 class AttackMLPModel(AttackBaseModel):
+    trainable = True
     def __init__(self, args):
         super().__init__(args)
         self.model = nn.Sequential(
@@ -52,11 +54,31 @@ class AttackMLPModel(AttackBaseModel):
         return self.model(y_).squeeze()
     
 class AttackRandomModel(AttackBaseModel):
+    trainable = False
     def __init__(self, args):
         super().__init__(args)
         self.model = lambda yhat, y: torch.rand(y.shape[0], 1).squeeze()
 
 class AttackPredictModel(AttackBaseModel):
+    trainable = False
     def __init__(self, args):
         super().__init__(args)
         self.model = lambda yhat, y: (yhat.argmax(dim=1) == y).float()
+
+class AttackEntropyModel(AttackBaseModel):
+    trainable = False
+    def __init__(self, threshold, args):
+        super().__init__(args)
+        self.model = lambda yhat, y: (-torch.tensor(entropy(yhat.T)) > threshold).float()
+
+class AttackConfidenceModel(AttackBaseModel):
+    trainable = False
+    def __init__(self, threshold, args):
+        super().__init__(args)
+        self.model = lambda yhat, y: (torch.max(yhat, dim=-1)[0] > threshold).float()
+
+class AttackLossModel(AttackBaseModel):
+    trainable = False
+    def __init__(self, threshold, args):
+        super().__init__(args)
+        self.model = lambda yhat, y: (-nn.CrossEntropyLoss(reduction='none')(yhat, y) > threshold).float()

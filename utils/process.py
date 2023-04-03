@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader
-from torchmetrics import ROC
+from torchmetrics import ROC, AUROC
 import matplotlib.pyplot as plt
 from scipy.stats import entropy
 
@@ -47,8 +47,9 @@ def get_accuracy(metrics, labels, threshold, rule='greater'):
     return np.mean(preds == labels)
 
 def plot_roc_curve(metrics, labels, name):
-    roc = ROC(task='binary')
+    roc, auroc = ROC(task='binary'), AUROC(task='binary')
     fpr, tpr, thresholds = roc(metrics, labels)
+    print(f'{name} AUROC: {auroc(metrics, labels)}')
     plt.plot(fpr, tpr)
     plt.title(name)
     plt.xlabel('fpr')
