@@ -4,9 +4,22 @@ from torch.utils.data import DataLoader, Subset, ConcatDataset, Dataset
 from torchvision import transforms
 import lightning.pytorch as pl
 
-def get_CIFAR10():
-    train = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
-    test = CIFAR10(root='./data', train=False, download=True, transform=transforms.ToTensor())
+def get_dataset(name, transform = transforms.ToTensor()):
+    if name == 'MNIST':
+        return get_MNIST(transform)
+    elif name == 'CIFAR10':
+        return get_CIFAR10(transform)
+    else:
+        raise ValueError('Dataset not supported')
+    
+def get_MNIST(transform = transforms.ToTensor()):
+    train = MNIST(root='./data', train=True, download=True, transform=transform)
+    test = MNIST(root='./data', train=False, download=True, transform=transform)
+    return ConcatDataset([train, test])
+
+def get_CIFAR10(transform = transforms.ToTensor()):
+    train = CIFAR10(root='./data', train=True, download=True, transform=transform)
+    test = CIFAR10(root='./data', train=False, download=True, transform=transform)
     return ConcatDataset([train, test])
 
 def split_dataset(dataset):

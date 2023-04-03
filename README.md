@@ -1,11 +1,11 @@
 ## AIST4010 Project
 Membership Inference Attack
 
-- [ ] Metric-based Attacks:
+- [x] Metric-based Attacks:
   
   - [x] Confidence-based Attack
-  - [ ] Entropy-based Attack
+  - [x] Entropy-based Attack
   - [x] Loss-based Attack
 
-- [ ] MLP Attack
+- [x] MLP Attack
 - [ ] Defense
