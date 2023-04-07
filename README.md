@@ -2,25 +2,41 @@
 Membership Inference Attack
 
 - [x] Metric-based Attacks:
-  
   - [x] Confidence-based Attack
   - [x] Entropy-based Attack
   - [x] Loss-based Attack
-
 - [x] MLP Attack
-- [x] Target Model
+- [ ] Target Model
   - [x] CNN
   - [x] MLP
   - [x] Resnet
   - [x] Alexnet
+  - [ ] Pretrained Resnet
+  - [ ] Pretrained Alexnet
 - [x] Defense
   - [x] Confidence Masking
   - [x] Regularization
-  - [ ] Diffierential Privacy (?)
-- [ ] Datasets
+  - [x] Augmentation
+  - [x] Mix-up
+  - [ ] DP-SGD (ocapus?)
+- [x] Datasets
   - [x] MNIST
   - [x] CIFAR10
   - [x] CIFAR100
   - [x] A1-Kaggle
-- [ ] Hyper-parameter Tuning
 - [ ] Experiments
+  - [ ] Attack accuracies on different models (No defense)
+    - [ ] MNIST
+    - [ ] CIFAR10
+    - [ ] CIFAR100
+    - [ ] A1-Kaggle
+  - [ ] Transferability of attacks
+    - [ ] CIFAR10
+    - [ ] CIFAR100
+    - [ ] A1-Kaggle
+  - [ ] Defense ability and influence on generalization gap
+    - [ ] Confidence Masking
+    - [ ] Regularization
+    - [ ] Augmentation
+    - [ ] Mix-up
+- [ ] Code Organization

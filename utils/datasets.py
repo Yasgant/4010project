@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, Subset, ConcatDataset, Dataset, random_
 from torchvision import transforms
 import lightning.pytorch as pl
 import os
+import numpy as np
 
 def get_dataset(name, transform = transforms.ToTensor()):
     if name == 'MNIST':
@@ -74,3 +75,4 @@ def prepare_membership(model, member_data, nonmember_data):
     member_labels = torch.cat(member_labels)
     nonmember_labels = torch.cat(nonmember_labels)
     return MembershipDataset(member_preds, member_labels, nonmember_preds, nonmember_labels)
+

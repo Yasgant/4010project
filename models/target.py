@@ -4,8 +4,27 @@ import lightning.pytorch as pl
 from torch import nn, optim
 from torchmetrics import Accuracy
 from .resnet import resnet18
+from .effnet import Effnetv2_s
 from .alexnet import alexnet
 from opacus import PrivacyEngine
+
+def mixup_data(x, y, alpha=1.0):
+    '''From https://github.com/facebookresearch/mixup-cifar10
+       Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size()[0]
+    index = torch.randperm(batch_size)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    return mixed_x, y_a, y_b, lam
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
 class TargetBaseModel(pl.LightningModule):
     def __init__(self, args):
@@ -17,17 +36,27 @@ class TargetBaseModel(pl.LightningModule):
         self.Accuracy = Accuracy('multiclass', num_classes=10)
         self.softmax = nn.Softmax(dim=1)
         self.train_acc, self.val_acc = None, None
+        self.mixup = args.mixup
         self.save_hyperparameters()
+        
     def forward(self, x):
         return self.model(x)
     
     
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
-        loss = self.loss(y_hat, y)
-        metrics = {'train_loss': loss, 'train_acc': self.Accuracy(y_hat, y)}
-        self.log_dict(metrics)
+        if self.mixup:
+            x, y_a, y_b, lam = mixup_data(x, y, alpha=1.0)
+            y_hat = self(x)
+            loss = mixup_criterion(self.loss, y_hat, y_a, y_b, lam)
+            acc = self.Accuracy(y_hat, y_a) * lam + self.Accuracy(y_hat, y_b) * (1 - lam)
+            metrics = {'train_loss': loss, 'train_acc': acc}
+            self.log_dict(metrics)
+        else:
+            y_hat = self(x)
+            loss = self.loss(y_hat, y)
+            metrics = {'train_loss': loss, 'train_acc': self.Accuracy(y_hat, y)}
+            self.log_dict(metrics)
         return loss
     
     
@@ -191,4 +220,33 @@ class TargetAlexnetModel_A1K(TargetBaseModel):
     def __init__(self, args):
         super().__init__(args)
         self.model = alexnet(classes=1000)
+        self.Accuracy = Accuracy('multiclass', num_classes=1000)
+
+class TargetCNNModel_A1K(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = Effnetv2_s()
+        self.Accuracy = Accuracy('multiclass', num_classes=1000)
+
+class TargetMLPModel_A1K(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64*64*3, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 1000)
+        )
+        self.Accuracy = Accuracy('multiclass', num_classes=1000)
+
+class TargetPretrainModel(TargetBaseModel):
+    def __init__(self, model, num_classes, args):
+        super().__init__(args)
+        self.model = Effnetv2_s()
+        self.model.load_state_dict(torch.load('pretrained_model/effnetv2_s.pth'))
+        self.model.fc = nn.Linear(1280, 1000)
         self.Accuracy = Accuracy('multiclass', num_classes=1000)

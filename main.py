@@ -31,6 +31,8 @@ parser.add_argument('--attack_model', type=str, default='mlp')
 parser.add_argument('--attack_hidden_size', type=int, default=20)
 parser.add_argument('--model_weight_decay', type=float, default=0.0)
 parser.add_argument('--topk', type=int, default=0)
+parser.add_argument('--data_aug', action='store_true')
+parser.add_argument('--mixup', action='store_true')
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -54,7 +56,13 @@ if __name__ == '__main__':
     train_data, test_data, member_data, nonmember_data = utils.split_dataset(dataset)
     arghash = hash(str(args))
     if not target_trained:
+        if args.data_aug:
+            train_data.dataset.datasets[0].transform = transforms.Compose([transforms.RandAugment(), transform])
+            train_data.dataset.datasets[1].transform = transforms.Compose([transforms.RandAugment(), transform])
         target_model = train(target_model, f'target_{args.target_model}model_{args.dataset}_{arghash}', train_data, test_data, args=args, epochs=args.model_epochs)
+        if args.data_aug:
+            train_data.dataset.datasets[0].transform = transform
+            train_data.dataset.datasets[1].transform = transform
     if not shadow_trained:
         shadow_model = train(shadow_model, f'shadow_{args.target_model}model_{args.dataset}_{arghash}', member_data, nonmember_data, args=args, epochs=args.model_epochs)
     membership_dataset = utils.prepare_membership(shadow_model, member_data, nonmember_data)

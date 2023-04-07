@@ -38,6 +38,10 @@ def _get_target_type(name, dataset):
             return TargetResnetModel_A1K
         elif name == 'alexnet':
             return TargetAlexnetModel_A1K
+        elif name == 'cnn':
+            return TargetCNNModel_A1K
+        elif name == 'mlp':
+            return TargetMLPModel_A1K
         else:
             raise ValueError('Invalid model name')
     else:

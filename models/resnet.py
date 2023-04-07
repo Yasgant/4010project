@@ -158,5 +158,3 @@ def resnet152(num_classes=10):
     """ return a ResNet 152 object
     """
     return ResNet(BottleNeck, [3, 8, 36, 3], num_classes)
-
-
