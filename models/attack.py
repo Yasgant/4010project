@@ -53,6 +53,36 @@ class AttackMLPModel(AttackBaseModel):
         y_ = torch.cat([yhat, one_hot(y, num_classes=10)], dim=1)
         return self.model(y_).squeeze()
     
+class AttackMLPModel_CIFAR100(AttackBaseModel):
+    trainable = True
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = nn.Sequential(
+                nn.Linear(200, args.attack_hidden_size),
+                nn.ReLU(),
+                nn.Linear(args.attack_hidden_size, 1),
+                nn.Sigmoid()
+            )
+        
+    def forward(self, yhat, y):
+        y_ = torch.cat([yhat, one_hot(y, num_classes=100)], dim=1)
+        return self.model(y_).squeeze()
+    
+class AttackMLPModel_A1K(AttackBaseModel):
+    trainable = True
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = nn.Sequential(
+                nn.Linear(2000, args.attack_hidden_size),
+                nn.ReLU(),
+                nn.Linear(args.attack_hidden_size, 1),
+                nn.Sigmoid()
+            )
+        
+    def forward(self, yhat, y):
+        y_ = torch.cat([yhat, one_hot(y, num_classes=1000)], dim=1)
+        return self.model(y_).squeeze()
+    
 class AttackRandomModel(AttackBaseModel):
     trainable = False
     def __init__(self, args):

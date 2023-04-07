@@ -3,6 +3,9 @@ import torch
 import lightning.pytorch as pl
 from torch import nn, optim
 from torchmetrics import Accuracy
+from .resnet import resnet18
+from .alexnet import alexnet
+from opacus import PrivacyEngine
 
 class TargetBaseModel(pl.LightningModule):
     def __init__(self, args):
@@ -15,7 +18,6 @@ class TargetBaseModel(pl.LightningModule):
         self.softmax = nn.Softmax(dim=1)
         self.train_acc, self.val_acc = None, None
         self.save_hyperparameters()
-    
     def forward(self, x):
         return self.model(x)
     
@@ -87,6 +89,16 @@ class TargetCNNModel(TargetBaseModel):
             nn.Linear(128*4*4, 10)
         )
 
+class TargetResnetModel(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = resnet18(num_classes=10)
+
+class TargetAlexnetModel(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = alexnet(classes=10)
+
 class TargetMLPModel_MNIST(TargetBaseModel):
     def __init__(self, args):
         super().__init__(args)
@@ -119,3 +131,64 @@ class TargetCNNModel_MNIST(TargetBaseModel):
             nn.Flatten(),
             nn.Linear(576, 10)
         )
+
+class TargetMLPModel_CIFAR100(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(32*32*3, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 100)
+        )
+        self.Accuracy = Accuracy('multiclass', num_classes=100)
+
+class TargetCNNModel_CIFAR100(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 32, 3, 1, 1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, 1, 1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, 1, 1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(128*4*4, 100)
+        )
+        self.Accuracy = Accuracy('multiclass', num_classes=100)
+
+class TargetResnetModel_CIFAR100(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = resnet18(num_classes=100)
+        self.Accuracy = Accuracy('multiclass', num_classes=100)
+
+class TargetAlexnetModel_CIFAR100(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = alexnet(classes=100)
+        self.Accuracy = Accuracy('multiclass', num_classes=100)
+
+class TargetResnetModel_A1K(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = resnet18(num_classes=1000)
+        self.Accuracy = Accuracy('multiclass', num_classes=1000)
+
+class TargetAlexnetModel_A1K(TargetBaseModel):
+    def __init__(self, args):
+        super().__init__(args)
+        self.model = alexnet(classes=1000)
+        self.Accuracy = Accuracy('multiclass', num_classes=1000)
