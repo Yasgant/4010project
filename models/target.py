@@ -37,6 +37,9 @@ class TargetBaseModel(pl.LightningModule):
         self.softmax = nn.Softmax(dim=1)
         self.train_acc, self.val_acc = None, None
         self.mixup = args.mixup
+        self.dp = args.dp
+        if self.dp:
+            self.privacy_engine = PrivacyEngine()
         self.save_hyperparameters()
         
     def forward(self, x):
@@ -70,9 +73,13 @@ class TargetBaseModel(pl.LightningModule):
     
     
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
-        return [optimizer], [scheduler]
+        if self.dp:
+            scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=40, gamma=0.1)
+            return [self.optimizer], [scheduler]
+        else:
+            optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
+            return [optimizer], [scheduler]
     
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
         x, y = batch
@@ -82,6 +89,13 @@ class TargetBaseModel(pl.LightningModule):
             topk, indices = torch.topk(y_hat, self.topk, dim=1)
             y_hat = torch.zeros_like(y_hat).scatter(1, indices, topk)
         return y_hat, y
+    
+    def on_train_epoch_end(self):
+        pass
+        # if self.dp:
+        #     eps = self.privacy_engine.get_epsilon(1e-5)
+        #     metric = {'eps': torch.tensor(eps, dtype=torch.float32)}
+        #     self.log_dict(metric)
     
 class TargetMLPModel(TargetBaseModel):
     def __init__(self, args):

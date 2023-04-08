@@ -33,6 +33,7 @@ parser.add_argument('--model_weight_decay', type=float, default=0.0)
 parser.add_argument('--topk', type=int, default=0)
 parser.add_argument('--data_aug', action='store_true')
 parser.add_argument('--mixup', action='store_true')
+parser.add_argument('--dp', action='store_true')
 args = parser.parse_args()
 
 if __name__ == '__main__':

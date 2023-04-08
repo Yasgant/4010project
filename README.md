@@ -6,19 +6,17 @@ Membership Inference Attack
   - [x] Entropy-based Attack
   - [x] Loss-based Attack
 - [x] MLP Attack
-- [ ] Target Model
+- [x] Target Model
   - [x] CNN
   - [x] MLP
   - [x] Resnet
   - [x] Alexnet
-  - [ ] Pretrained Resnet
-  - [ ] Pretrained Alexnet
 - [x] Defense
   - [x] Confidence Masking
   - [x] Regularization
   - [x] Augmentation
   - [x] Mix-up
-  - [ ] DP-SGD (ocapus?)
+  - [x] DP-SGD
 - [x] Datasets
   - [x] MNIST
   - [x] CIFAR10
