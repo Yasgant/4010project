@@ -74,7 +74,13 @@ def get_target_model(name, dataset, args):
     TargetModel = _get_target_type(name, dataset)
     trained = False
     arghash = hash(str(args))
-    if os.path.exists(f'data/target_{name}model_{dataset}_{arghash}.ckpt'):
+    if args.no_load:
+        model = TargetModel(args)
+        return model, trained
+    if args.load_target is not None:
+        model = TargetModel.load_from_checkpoint(f'data/{args.load_target}.ckpt')
+        trained = True
+    elif os.path.exists(f'data/target_{name}model_{dataset}_{arghash}.ckpt'):
         model = TargetModel.load_from_checkpoint(f'data/target_{name}model_{dataset}_{arghash}.ckpt')
         trained = True
     else:
@@ -85,7 +91,13 @@ def get_shadow_model(name, dataset, args):
     ShadowModel = _get_target_type(name, dataset)
     trained = False
     arghash = hash(str(args))
-    if os.path.exists(f'data/shadow_{name}model_{dataset}_{arghash}.ckpt'):
+    if args.no_load:
+        model = ShadowModel(args)
+        return model, trained
+    if args.load_shadow is not None:
+        model = ShadowModel.load_from_checkpoint(f'data/{args.load_shadow}.ckpt')
+        trained = True
+    elif os.path.exists(f'data/shadow_{name}model_{dataset}_{arghash}.ckpt'):
         model = ShadowModel.load_from_checkpoint(f'data/shadow_{name}model_{dataset}_{arghash}.ckpt')
         trained = True
     else:

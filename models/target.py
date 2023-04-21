@@ -35,7 +35,7 @@ class TargetBaseModel(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss()
         self.Accuracy = Accuracy('multiclass', num_classes=10)
         self.softmax = nn.Softmax(dim=1)
-        self.train_acc, self.val_acc = None, None
+        self.train_acc, self.val_acc = 0., 0.
         self.mixup = args.mixup
         self.dp = args.dp
         if self.dp:
@@ -58,8 +58,10 @@ class TargetBaseModel(pl.LightningModule):
         else:
             y_hat = self(x)
             loss = self.loss(y_hat, y)
-            metrics = {'train_loss': loss, 'train_acc': self.Accuracy(y_hat, y)}
+            acc = self.Accuracy(y_hat, y)
+            metrics = {'train_loss': loss, 'train_acc': acc}
             self.log_dict(metrics)
+        self.train_acc.append(acc)
         return loss
     
     
@@ -67,8 +69,10 @@ class TargetBaseModel(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.loss(y_hat, y)
-        metrics = {'val_loss': loss, 'val_acc': self.Accuracy(y_hat, y)}
+        acc = self.Accuracy(y_hat, y)
+        metrics = {'val_loss': loss, 'val_acc': acc}
         self.log_dict(metrics)
+        self.val_acc.append(acc)
         return loss
     
     
@@ -91,11 +95,21 @@ class TargetBaseModel(pl.LightningModule):
         return y_hat, y
     
     def on_train_epoch_end(self):
-        pass
+        self.train_acc = torch.stack(self.train_acc).mean().item()
         # if self.dp:
         #     eps = self.privacy_engine.get_epsilon(1e-5)
         #     metric = {'eps': torch.tensor(eps, dtype=torch.float32)}
         #     self.log_dict(metric)
+    
+    def on_validation_epoch_end(self):
+        self.val_acc = torch.stack(self.val_acc).mean().item()
+    
+    def on_train_epoch_start(self):
+        self.train_acc = []
+    
+    def on_validation_epoch_start(self):
+        self.val_acc = []
+    
     
 class TargetMLPModel(TargetBaseModel):
     def __init__(self, args):
@@ -197,6 +211,9 @@ class TargetMLPModel_CIFAR100(TargetBaseModel):
 class TargetCNNModel_CIFAR100(TargetBaseModel):
     def __init__(self, args):
         super().__init__(args)
+        output = args.limit_label
+        if output is None:
+            output = 100
         self.model = nn.Sequential(
             nn.Conv2d(3, 32, 3, 1, 1),
             nn.ReLU(),
@@ -208,9 +225,9 @@ class TargetCNNModel_CIFAR100(TargetBaseModel):
             nn.ReLU(),
             nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(128*4*4, 100)
+            nn.Linear(128*4*4, output)
         )
-        self.Accuracy = Accuracy('multiclass', num_classes=100)
+        self.Accuracy = Accuracy('multiclass', num_classes=output)
 
 class TargetResnetModel_CIFAR100(TargetBaseModel):
     def __init__(self, args):
@@ -239,8 +256,11 @@ class TargetAlexnetModel_A1K(TargetBaseModel):
 class TargetCNNModel_A1K(TargetBaseModel):
     def __init__(self, args):
         super().__init__(args)
-        self.model = Effnetv2_s()
-        self.Accuracy = Accuracy('multiclass', num_classes=1000)
+        output = args.limit_label
+        if output is None:
+            output = 1000
+        self.model = Effnetv2_s(output)
+        self.Accuracy = Accuracy('multiclass', num_classes=output)
 
 class TargetMLPModel_A1K(TargetBaseModel):
     def __init__(self, args):

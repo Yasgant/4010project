@@ -22,19 +22,24 @@ Membership Inference Attack
   - [x] CIFAR10
   - [x] CIFAR100
   - [x] A1-Kaggle
-- [ ] Experiments
-  - [ ] Attack accuracies on different models (No defense)
-    - [ ] MNIST
-    - [ ] CIFAR10
-    - [ ] CIFAR100
-    - [ ] A1-Kaggle
-  - [ ] Transferability of attacks
-    - [ ] CIFAR10
-    - [ ] CIFAR100
-    - [ ] A1-Kaggle
-  - [ ] Defense ability and influence on generalization gap
-    - [ ] Confidence Masking
-    - [ ] Regularization
-    - [ ] Augmentation
-    - [ ] Mix-up
+- [x] Experiments
+  - [x] Attack accuracies on different models (No defense)
+    - [x] MNIST
+    - [x] CIFAR10
+    - [x] CIFAR100
+    - [x] A1-Kaggle
+  - [x] Transferability of attacks
+    - [x] Different Architecture
+      - [x] CIFAR10
+      - [x] CIFAR100
+      - [x] A1-Kaggle
+    - [x] Different Dataset
+      - [x] CIFAR10
+      - [x] CIFAR100
+      - [x] A1-Kaggle
+  - [x] Defense ability on generalization gap
+    - [x] Confidence Masking
+    - [x] Regularization
+    - [x] Augmentation
+    - [x] Mix-up
 - [ ] Code Organization

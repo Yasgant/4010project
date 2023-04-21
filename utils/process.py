@@ -55,3 +55,4 @@ def plot_roc_curve(metrics, labels, name):
     plt.xlabel('fpr')
     plt.ylabel('tpr')
     plt.show()
+    return auroc(metrics, labels).item()

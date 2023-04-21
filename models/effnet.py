@@ -69,7 +69,7 @@ class MBConv(nn.Module):
             return self.conv(x)
 
 class EfficientNet(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, limit):
         super().__init__()
         self.config = config
         input_channel = make_divisible_by_8(24)
@@ -83,7 +83,7 @@ class EfficientNet(nn.Module):
             output_channel = 1792
             self.conv = conv_1x1(input_channel, output_channel)
             self.avg = nn.AdaptiveAvgPool2d((1, 1))
-            self.classifier = nn.Linear(output_channel, 1000)
+            self.classifier = nn.Linear(output_channel, limit)
         
     def forward(self, x):
         x = self.features(x)
@@ -93,7 +93,7 @@ class EfficientNet(nn.Module):
         x = self.classifier(x)
         return x
 
-def Effnetv2_s():
+def Effnetv2_s(limit=1000):
     config = [
         # t, c, n, s, SE
         [1,  24,  2, 1, 0],
@@ -103,4 +103,4 @@ def Effnetv2_s():
         [6, 160,  9, 2, 1],
         [6, 256, 15, 1, 1],
     ]
-    return EfficientNet(config)
+    return EfficientNet(config, limit)
