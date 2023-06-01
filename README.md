@@ -1,6 +1,8 @@
 ## AIST4010 Project
 Membership Inference Attack
 
+[Report](AIST4010_Project_Report.pdf)
+
 ### Usage
 Run experiments
 ```bash
@@ -49,7 +51,9 @@ Arguments:
 
 `--shadow_dataset`: Dataset to use for shadow model. Currently support `MNIST`, `CIFAR10`, `CIFAR100`, `A1-Kaggle`.
 
-`--limit_label`: Only keep data with a limited label (e.g. CIFAR100 with only first 10 classes)
+`--limit_label`: Only keep data with a limited label. (e.g. CIFAR100 with only first 10 classes)
+
+### TODO list:
 
 - [x] Metric-based Attacks:
   - [x] Confidence-based Attack
